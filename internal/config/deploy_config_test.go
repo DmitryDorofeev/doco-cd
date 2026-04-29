@@ -211,7 +211,7 @@ func TestResolveDeployConfigs_InlineOverride(t *testing.T) {
 		CloneUrl:    "https://example.com/repo.git",
 		Reference:   "refs/heads/main",
 		Interval:    60,
-		Deployments: []*DeployConfig{{Name: "inline-stack"}},
+		Deployments: []*DeployConfig{DefaultDeployConfig("inline-stack", "")},
 	}
 
 	// Validate poll config to ensure inline deployments are validated
@@ -285,13 +285,15 @@ func TestResolveDeployConfigs_InlineAutoDiscover(t *testing.T) {
 		}
 	}
 
+	autoDiscoverConfig := DefaultDeployConfig("", "")
+	autoDiscoverConfig.WorkingDirectory = "services"
+	autoDiscoverConfig.AutoDiscover = true
+
 	poll := PollConfig{
-		CloneUrl:  "https://example.com/repo.git",
-		Reference: "refs/heads/main",
-		Interval:  60,
-		Deployments: []*DeployConfig{
-			{WorkingDirectory: "services", AutoDiscover: true},
-		},
+		CloneUrl:    "https://example.com/repo.git",
+		Reference:   "refs/heads/main",
+		Interval:    60,
+		Deployments: []*DeployConfig{autoDiscoverConfig},
 	}
 
 	if err := poll.Validate(); err != nil {

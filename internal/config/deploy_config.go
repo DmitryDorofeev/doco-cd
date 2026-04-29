@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -96,12 +97,18 @@ func (c *DeployConfig) ResolveGitDepth(globalDepth int) int {
 
 // DefaultDeployConfig creates a DeployConfig with default values.
 func DefaultDeployConfig(name, reference string) *DeployConfig {
-	return &DeployConfig{
-		Name:             name,
-		Reference:        reference,
-		WorkingDirectory: ".",
-		ComposeFiles:     cli.DefaultFileNames,
+	c := &DeployConfig{}
+	// defaults.Set only fails on malformed `default` struct tags — covered by tests.
+	if err := defaults.Set(c); err != nil {
+		panic(fmt.Sprintf("failed to apply DeployConfig defaults: %v", err))
 	}
+
+	c.Name = name
+	c.Reference = reference
+	c.WorkingDirectory = "."
+	c.ComposeFiles = cli.DefaultFileNames
+
+	return c
 }
 
 // LogValue implements the slog.LogValuer interface for DeployConfig.
@@ -172,6 +179,16 @@ func (c *DeployConfig) UnmarshalYAML(unmarshal func(any) error) error {
 	}
 
 	return nil
+}
+
+func (c *DeployConfig) UnmarshalJSON(data []byte) error {
+	if err := defaults.Set(c); err != nil {
+		return err
+	}
+
+	type Plain DeployConfig
+
+	return json.Unmarshal(data, (*Plain)(c))
 }
 
 // Hash returns a hash of the DeployConfig struct (without changing the order of its elements).

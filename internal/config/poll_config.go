@@ -57,11 +57,6 @@ func (c *PollConfig) Validate() error {
 	// If inline deployments are defined, validate them
 	if len(c.Deployments) > 0 {
 		for _, d := range c.Deployments {
-			// Ensure DeployConfig defaults are applied when defined inline or programmatically
-			if err := defaults.Set(d); err != nil {
-				return err
-			}
-
 			// If reference isn't set on the deployment, inherit from poll config
 			if d.Reference == "" {
 				d.Reference = c.Reference
